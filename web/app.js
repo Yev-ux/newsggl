@@ -96,6 +96,15 @@ function fmtDate(iso) {
     }).format(d);
 }
 
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+}
+
 function renderDigest(items) {
     els.digestList.innerHTML = "";
 
@@ -110,9 +119,9 @@ function renderDigest(items) {
         const card = document.createElement("article");
         card.className = "digest-item";
         card.innerHTML = `
-      <h3><a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.title || "Без заголовка"}</a></h3>
+      <h3><a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title || "Без заголовка")}</a></h3>
       <div class="digest-meta">
-        <span>${item.source || "Unknown source"}</span>
+        <span>${escapeHtml(item.source || "Unknown source")}</span>
         <span> · ${fmtDate(item.publishedAt)}</span>
       </div>
     `;
@@ -137,22 +146,22 @@ function renderSummaryGroup(targetEl, groups) {
         card.className = "summary-item";
 
         const bullets = (group.bullets || [])
-            .map((b) => `<li>${b}</li>`)
+            .map((b) => `<li>${escapeHtml(b)}</li>`)
             .join("");
 
         const links = (group.topLinks || [])
             .map(
                 (l) => `
           <div class="link-item">
-            <a href="${l.url}" target="_blank" rel="noopener noreferrer">${l.title || l.url}</a>
-            <div class="digest-meta">${l.source || ""} ${l.publishedAt ? `· ${fmtDate(l.publishedAt)}` : ""}</div>
+            <a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.title || l.url)}</a>
+            <div class="digest-meta">${escapeHtml(l.source || "")} ${l.publishedAt ? `· ${fmtDate(l.publishedAt)}` : ""}</div>
           </div>
         `
             )
             .join("");
 
         card.innerHTML = `
-      <h3>${group.value} <span class="meta">(${group.itemsCount || 0})</span></h3>
+      <h3>${escapeHtml(group.value)} <span class="meta">(${group.itemsCount || 0})</span></h3>
       <ul class="bullets">${bullets}</ul>
       <div class="links">${links || '<div class="empty">Нет ссылок</div>'}</div>
     `;

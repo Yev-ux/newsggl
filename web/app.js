@@ -88,6 +88,18 @@ async function tryApiGet(paths) {
     throw lastError || new Error("No API route matched");
 }
 
+async function fireAndForgetGet(path) {
+    const requestUrl = buildRequestUrl(path);
+    await fetch(requestUrl, {
+        method: "GET",
+        mode: "no-cors",
+    });
+}
+
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function fmtDate(iso) {
     if (!iso) return "—";
     const d = new Date(iso);
@@ -221,10 +233,20 @@ async function runTodayPipeline() {
         setStatus("Сборка завершена, обновляю данные…", "ok");
         await refreshData();
     } catch (error) {
-        const hint = error?.message === "Failed to fetch"
-            ? " Проверь CORS и доступность /exec."
-            : "";
-        setStatus(`Ошибка запуска pipeline: ${error.message}${hint}`, "error");
+        if (error?.message === "Failed to fetch") {
+            try {
+                setStatus("CORS блокирует чтение ответа. Пытаюсь запустить /run в no-cors режиме…");
+                await fireAndForgetGet("/run");
+                setStatus("Команда /run отправлена. Жду обновления данных…");
+                await sleep(6000);
+                await refreshData();
+                return;
+            } catch (fallbackError) {
+                setStatus(`Ошибка fallback запуска: ${fallbackError.message}`, "error");
+                return;
+            }
+        }
+        setStatus(`Ошибка запуска pipeline: ${error.message}`, "error");
     }
 }
 

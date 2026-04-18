@@ -11,6 +11,7 @@
 - Использует фиксированные `API_BASE_URL` и `API_TOKEN`, зашитые в `web/app.js` (без ручного ввода в UI).
 - Для Google Apps Script `/exec` автоматически отправляет запросы в формате `?route=...&auth=...&token=...` (без `Authorization` header, чтобы избежать CORS preflight проблем).
 - Поддерживает fallback route-имена для GAS (`summaries_today`, `digest_today`, `run_plan`) на случай, если backend не использует slash-роуты.
+- Если прямой браузерный запрос блокируется CORS (`Failed to fetch`), frontend автоматически пробует публичный CORS proxy (`api.allorigins.win`) как fallback.
 
 ## Локальный запуск
 

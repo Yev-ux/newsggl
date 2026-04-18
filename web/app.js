@@ -1,6 +1,7 @@
 const API_BASE_URL =
     "https://script.google.com/macros/s/AKfycbwE-LGIoSUFGECTZ64DWb3rW-iERnjFrE5-XMfn8OIPkF1PxNBYwLmdw-ezULTxK_jWQQ/exec";
 const API_TOKEN = "yev_super_secret_12345";
+const CORS_PROXY_URL = "https://api.allorigins.win/raw?url=";
 
 const els = {
     refreshBtn: document.getElementById("refreshBtn"),
@@ -21,9 +22,18 @@ function setStatus(message, tone = "") {
 
 async function apiGet(path) {
     const requestUrl = buildRequestUrl(path);
-    const resp = await fetch(requestUrl, {
-        method: "GET",
-    });
+    let resp;
+    try {
+        resp = await fetch(requestUrl, { method: "GET" });
+    } catch (error) {
+        // Browser/CORS fallback for locked-down endpoints (e.g. GAS /exec without ACAO).
+        if (String(error?.message || "").includes("Failed to fetch")) {
+            const proxiedUrl = `${CORS_PROXY_URL}${encodeURIComponent(requestUrl)}`;
+            resp = await fetch(proxiedUrl, { method: "GET" });
+        } else {
+            throw error;
+        }
+    }
 
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok) {

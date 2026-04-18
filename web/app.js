@@ -1,15 +1,8 @@
-const STORAGE_KEY = "yev_news_web_config";
-
-const state = {
-    baseUrl: "",
-    token: "",
-};
+const API_BASE_URL =
+    "https://script.google.com/macros/s/AKfycbwE-LGIoSUFGECTZ64DWb3rW-iERnjFrE5-XMfn8OIPkF1PxNBYwLmdw-ezULTxK_jWQQ/exec";
+const API_TOKEN = "yev_super_secret_12345";
 
 const els = {
-    apiBaseUrl: document.getElementById("apiBaseUrl"),
-    apiToken: document.getElementById("apiToken"),
-    saveConfigBtn: document.getElementById("saveConfigBtn"),
-    clearConfigBtn: document.getElementById("clearConfigBtn"),
     refreshBtn: document.getElementById("refreshBtn"),
     runBtn: document.getElementById("runBtn"),
     status: document.getElementById("status"),
@@ -26,54 +19,10 @@ function setStatus(message, tone = "") {
     els.status.className = `status ${tone}`.trim();
 }
 
-function loadConfig() {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return;
-        const data = JSON.parse(raw);
-        state.baseUrl = (data.baseUrl || "").replace(/\/$/, "");
-        state.token = data.token || "";
-    } catch {
-        // ignore
-    }
-}
-
-function saveConfig() {
-    state.baseUrl = els.apiBaseUrl.value.trim().replace(/\/$/, "");
-    state.token = els.apiToken.value.trim();
-
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-            baseUrl: state.baseUrl,
-            token: state.token,
-        })
-    );
-
-    setStatus("Конфигурация сохранена", "ok");
-}
-
-function clearConfig() {
-    localStorage.removeItem(STORAGE_KEY);
-    state.baseUrl = "";
-    state.token = "";
-    els.apiBaseUrl.value = "";
-    els.apiToken.value = "";
-    setStatus("Конфигурация очищена", "ok");
-}
-
-function requireConfig() {
-    if (!state.baseUrl || !state.token) {
-        throw new Error("Заполните API Base URL и API Token в секции подключения.");
-    }
-}
-
 async function apiGet(path) {
-    requireConfig();
-
-    const resp = await fetch(`${state.baseUrl}${path}`, {
+    const resp = await fetch(`${API_BASE_URL}${path}`, {
         headers: {
-            Authorization: `Bearer ${state.token}`,
+            Authorization: `Bearer ${API_TOKEN}`,
         },
     });
 
@@ -218,23 +167,14 @@ async function runTodayPipeline() {
 }
 
 function bindEvents() {
-    els.saveConfigBtn.addEventListener("click", saveConfig);
-    els.clearConfigBtn.addEventListener("click", clearConfig);
     els.refreshBtn.addEventListener("click", refreshData);
     els.runBtn.addEventListener("click", runTodayPipeline);
 }
 
 function init() {
-    loadConfig();
-    els.apiBaseUrl.value = state.baseUrl;
-    els.apiToken.value = state.token;
     bindEvents();
-
-    if (state.baseUrl && state.token) {
-        refreshData();
-    } else {
-        setStatus("Укажите API Base URL и API Token, затем нажмите «Обновить данные».");
-    }
+    setStatus("API конфигурация зашита по умолчанию. Загружаю данные…");
+    refreshData();
 }
 
 init();

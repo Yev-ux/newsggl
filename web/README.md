@@ -8,6 +8,7 @@
 - Загружает `GET /summaries/today`.
 - По кнопке `Запустить сборку today` вызывает `GET /run/plan` и затем выполняет шаги `GET /run?...`.
 - Отображает digest items и summary группы (тикеры/темы) в мобильном friendly UI.
+- Использует фиксированные `API_BASE_URL` и `API_TOKEN`, зашитые в `web/app.js` (без ручного ввода в UI).
 
 ## Локальный запуск
 
@@ -19,16 +20,7 @@ python3 -m http.server 8080 -d web
 
 Откройте: `http://localhost:8080`.
 
-> Примечание: из-за CORS backend должен отвечать с `Access-Control-Allow-Origin` (в вашем backend это уже включено).
-
-## Настройка в UI
-
-В блоке **Подключение к API** укажите:
-
-- `API Base URL`, например `https://your-worker.workers.dev`
-- `API Token` (тот же ключ, что отправляется как `Authorization: Bearer ...`)
-
-Конфиг сохраняется в `localStorage` браузера.
+> Примечание: из-за CORS backend должен отвечать с `Access-Control-Allow-Origin`.
 
 ## GitHub Pages
 

@@ -39,7 +39,7 @@ function buildRequestUrl(path) {
     // API expects query param route + auth/token, not path-based routing.
     if (base.pathname.endsWith("/exec")) {
         const [routePath, routeQueryRaw = ""] = String(path).split("?");
-        const route = routePath.replace(/^\//, "");
+        const route = normalizeExecRoute(routePath.replace(/^\//, ""));
         const routeQuery = new URLSearchParams(routeQueryRaw);
 
         const url = new URL(API_BASE_URL);
@@ -55,6 +55,27 @@ function buildRequestUrl(path) {
 
     // Fallback for regular REST backends.
     return `${API_BASE_URL}${path}`;
+}
+
+function normalizeExecRoute(route) {
+    const map = {
+        "summaries/today": "summaries_today",
+        "digest/today": "digest_today",
+        "run/plan": "run_plan",
+    };
+    return map[route] || route;
+}
+
+async function tryApiGet(paths) {
+    let lastError = null;
+    for (const p of paths) {
+        try {
+            return await apiGet(p);
+        } catch (error) {
+            lastError = error;
+        }
+    }
+    throw lastError || new Error("No API route matched");
 }
 
 function fmtDate(iso) {
@@ -149,8 +170,8 @@ async function refreshData() {
         setStatus("Загружаю digest и summaries…");
 
         const [digest, summaries] = await Promise.all([
-            apiGet("/digest/today"),
-            apiGet("/summaries/today"),
+            tryApiGet(["/digest/today", "/digest_today"]),
+            tryApiGet(["/summaries/today", "/summaries_today"]),
         ]);
 
         renderDigest(digest.items || []);
@@ -172,18 +193,19 @@ async function refreshData() {
 
 async function runTodayPipeline() {
     try {
-        setStatus("Запрашиваю run plan…");
-        const plan = await apiGet("/run/plan");
+        setStatus("Запускаю pipeline…");
+        const plan = await tryApiGet(["/run/plan", "/run_plan"]).catch(() => null);
 
-        if (!Array.isArray(plan.steps) || plan.steps.length === 0) {
-            throw new Error("run plan пустой");
-        }
-
-        let index = 0;
-        for (const step of plan.steps) {
-            index += 1;
-            setStatus(`Выполняю шаг ${index}/${plan.steps.length}: ${step}`);
-            await apiGet(step);
+        if (plan && Array.isArray(plan.steps) && plan.steps.length) {
+            let index = 0;
+            for (const step of plan.steps) {
+                index += 1;
+                setStatus(`Выполняю шаг ${index}/${plan.steps.length}: ${step}`);
+                await apiGet(step);
+            }
+        } else {
+            // Fallback for backends without /run/plan route.
+            await apiGet("/run");
         }
 
         setStatus("Сборка завершена, обновляю данные…", "ok");

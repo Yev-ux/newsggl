@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Yevs News — Web</title>
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+    <div class="app">
+        <header class="app-header">
+            <h1>Yevs News</h1>
+            <p class="subtitle">Ежедневный digest и summaries по тикерам/темам</p>
+        </header>
+
+        <section class="card config-card">
+            <details>
+                <summary>Подключение к API</summary>
+                <div class="config-grid">
+                    <label>
+                        API Base URL
+                        <input id="apiBaseUrl" type="url" placeholder="https://your-worker.workers.dev" />
+                    </label>
+                    <label>
+                        API Token
+                        <input id="apiToken" type="password" placeholder="Bearer token" />
+                    </label>
+                </div>
+                <div class="config-actions">
+                    <button id="saveConfigBtn" class="btn btn-secondary">Сохранить</button>
+                    <button id="clearConfigBtn" class="btn btn-ghost">Очистить</button>
+                </div>
+                <p class="hint">
+                    Данные конфигурации хранятся только в вашем браузере (localStorage).
+                </p>
+            </details>
+        </section>
+
+        <section class="toolbar">
+            <button id="refreshBtn" class="btn">Обновить данные</button>
+            <button id="runBtn" class="btn btn-secondary">Запустить сборку today</button>
+        </section>
+
+        <section id="status" class="status" aria-live="polite"></section>
+
+        <section class="card">
+            <div class="section-title-row">
+                <h2>Daily Digest</h2>
+                <span id="digestMeta" class="meta"></span>
+            </div>
+            <div id="digestList" class="list"></div>
+        </section>
+
+        <section class="card">
+            <div class="section-title-row">
+                <h2>Summaries · Тикеры</h2>
+                <span id="tickersMeta" class="meta"></span>
+            </div>
+            <div id="tickersList" class="summary-list"></div>
+        </section>
+
+        <section class="card">
+            <div class="section-title-row">
+                <h2>Summaries · Темы</h2>
+                <span id="topicsMeta" class="meta"></span>
+            </div>
+            <div id="topicsList" class="summary-list"></div>
+        </section>
+    </div>
+
+    <script src="./app.js" type="module"></script>
+</body>
+
+</html>

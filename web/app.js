@@ -20,10 +20,9 @@ function setStatus(message, tone = "") {
 }
 
 async function apiGet(path) {
-    const resp = await fetch(`${API_BASE_URL}${path}`, {
-        headers: {
-            Authorization: `Bearer ${API_TOKEN}`,
-        },
+    const requestUrl = buildRequestUrl(path);
+    const resp = await fetch(requestUrl, {
+        method: "GET",
     });
 
     const data = await resp.json().catch(() => ({}));
@@ -31,6 +30,31 @@ async function apiGet(path) {
         throw new Error(data.error || `HTTP ${resp.status}`);
     }
     return data;
+}
+
+function buildRequestUrl(path) {
+    const base = new URL(API_BASE_URL);
+
+    // For Google Apps Script /exec deployments:
+    // API expects query param route + auth/token, not path-based routing.
+    if (base.pathname.endsWith("/exec")) {
+        const [routePath, routeQueryRaw = ""] = String(path).split("?");
+        const route = routePath.replace(/^\//, "");
+        const routeQuery = new URLSearchParams(routeQueryRaw);
+
+        const url = new URL(API_BASE_URL);
+        url.searchParams.set("route", route);
+        url.searchParams.set("auth", API_TOKEN);
+        url.searchParams.set("token", API_TOKEN);
+
+        for (const [k, v] of routeQuery.entries()) {
+            url.searchParams.set(k, v);
+        }
+        return url.toString();
+    }
+
+    // Fallback for regular REST backends.
+    return `${API_BASE_URL}${path}`;
 }
 
 function fmtDate(iso) {
@@ -139,7 +163,10 @@ async function refreshData() {
 
         setStatus("Данные обновлены", "ok");
     } catch (error) {
-        setStatus(`Ошибка: ${error.message}`, "error");
+        const hint = error?.message === "Failed to fetch"
+            ? " Проверь CORS и что API URL доступен извне."
+            : "";
+        setStatus(`Ошибка: ${error.message}${hint}`, "error");
     }
 }
 
@@ -162,7 +189,10 @@ async function runTodayPipeline() {
         setStatus("Сборка завершена, обновляю данные…", "ok");
         await refreshData();
     } catch (error) {
-        setStatus(`Ошибка запуска pipeline: ${error.message}`, "error");
+        const hint = error?.message === "Failed to fetch"
+            ? " Проверь CORS и доступность /exec."
+            : "";
+        setStatus(`Ошибка запуска pipeline: ${error.message}${hint}`, "error");
     }
 }
 

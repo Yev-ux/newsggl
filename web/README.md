@@ -9,6 +9,7 @@
 - По кнопке `Запустить сборку today` вызывает `GET /run/plan` и затем выполняет шаги `GET /run?...`.
 - Отображает digest items и summary группы (тикеры/темы) в мобильном friendly UI.
 - Использует фиксированные `API_BASE_URL` и `API_TOKEN`, зашитые в `web/app.js` (без ручного ввода в UI).
+- Для Google Apps Script `/exec` автоматически отправляет запросы в формате `?route=...&auth=...&token=...` (без `Authorization` header, чтобы избежать CORS preflight проблем).
 
 ## Локальный запуск
 
